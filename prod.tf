@@ -60,6 +60,12 @@ resource "aws_security_group" "my_security_group" {
 
 }
 
+module "web_app" {
+  source = "./.modules/web_app/main.tf"
+
+}
+
+
 # resource "aws_instance" "prod_web" {
 #   count = 2
 
@@ -91,52 +97,65 @@ resource "aws_security_group" "my_security_group" {
 #   }
 # }
 
-resource "aws_elb" "prod_web"{
-  name = "prod-web"
-  # instances = aws_instance.prod_web.*.id
-  subnets = [data.aws_subnet.my_subnet.id, data.aws_subnet.my_subnet2.id]
-  security_groups = [aws_security_group.my_security_group.id]
+# resource "aws_elb" "prod_web"{
+#   name = "prod-web"
+#   # instances = aws_instance.prod_web.*.id
+#   subnets = [data.aws_subnet.my_subnet.id, data.aws_subnet.my_subnet2.id]
+#   security_groups = [aws_security_group.my_security_group.id]
 
-  listener {
-    instance_port = 80
-    instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
-  }
-  tags = {
-    "Terraform" : "true"
-  }
+#   listener {
+#     instance_port = 80
+#     instance_protocol = "http"
+#     lb_port = 80
+#     lb_protocol = "http"
+#   }
+#   tags = {
+#     "Terraform" : "true"
+#   }
+# }
+
+# resource "aws_launch_template" "prod_web" {
+#   name_prefix   = "prod-web"
+#   image_id      = var.web_image_id
+#   instance_type = var.web_instance_type
+# }
+
+# resource "aws_autoscaling_group" "prod_web" {
+#   # availability_zones = ["eu-west-2a", "eu-west-2b"]
+#   vpc_zone_identifier = [data.aws_subnet.my_subnet.id, data.aws_subnet.my_subnet2.id]
+#   desired_capacity   = var.web_desired_capacity
+#   max_size           = var.web_max_size
+#   min_size           = var.web_min_size
+
+#   launch_template {
+#     id      = aws_launch_template.prod_web.id
+#     version = "$Latest"
+#   }
+#   tag {
+#   key                 = "Terraform"
+#   value               = "true"
+#   propagate_at_launch = true
+#   }
+# }
+
+# resource "aws_autoscaling_attachment" "prod_web" {
+#   autoscaling_group_name = aws_autoscaling_group.prod_web.id
+#   elb                    = aws_elb.prod_web.id
+# }
+
+module "web_app" {
+  source= "../modules/web_app"
+
+web_image_id         =var.web_image_id
+web_instance_type    = var.web_instance_type
+web_desired_capacity = var.web_desired_capacity
+web_max_size         = var.web_max_size
+web_min_size         = var.web_min_size
+subnets              = [data.aws_subnet.my_subnet.id, data.aws_subnet.my_subnet2.id]
+security_groups      = [aws_security_group.my_security_group]
+web_app              = "prod"
+
 }
-
-resource "aws_launch_template" "prod_web" {
-  name_prefix   = "prod-web"
-  image_id      = var.web_image_id
-  instance_type = var.web_instance_type
-}
-
-resource "aws_autoscaling_group" "prod_web" {
-  # availability_zones = ["eu-west-2a", "eu-west-2b"]
-  vpc_zone_identifier = [data.aws_subnet.my_subnet.id, data.aws_subnet.my_subnet2.id]
-  desired_capacity   = var.web_desired_capacity
-  max_size           = var.web_max_size
-  min_size           = var.web_min_size
-
-  launch_template {
-    id      = aws_launch_template.prod_web.id
-    version = "$Latest"
-  }
-  tag {
-  key                 = "Terraform"
-  value               = "true"
-  propagate_at_launch = true
-  }
-}
-
-resource "aws_autoscaling_attachment" "prod_web" {
-  autoscaling_group_name = aws_autoscaling_group.prod_web.id
-  elb                    = aws_elb.prod_web.id
-}
-
 
 
 
